@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  starter-web-ui example daemon config
+
+  ./src/starter-web-ui -c examples/web-ui.xml
+
+  UI: http://127.0.0.1:18767/
+  Bridge: http://127.0.0.1:18766/
+-->
+<web-ui version="1">
+  <http-address>127.0.0.1</http-address>
+  <http-port>18767</http-port>
+  <data-dir>./data</data-dir>
+  <user-config>user-config.xml</user-config>
+  <scheme-dir>scheme</scheme-dir>
+  <static-dir>static</static-dir>
+
+  <bridge-base-url>http://127.0.0.1:18766</bridge-base-url>
+  <!-- <bridge-token>change-me</bridge-token> -->
+  <!-- After UI sets a value, OR USR1 then clear it after N seconds (0 = keep). -->
+  <usr1-clear-timeout-sec>30</usr1-clear-timeout-sec>
+  <!-- Bridge PUT: retries with bouncing backoff (ms base, doubles each try). -->
+  <bridge-put-retries>5</bridge-put-retries>
+  <bridge-put-backoff-ms>100</bridge-put-backoff-ms>
+
+  <mysql>
+    <host>127.0.0.1</host>
+    <database>STARTER</database>
+    <!-- Explicit user/pass, or STReader via credentials-file (house deploy):
+    <credentials-file>/usr/local/etc/starter/db-credentials</credentials-file>
+    -->
+    <user>STReader</user>
+    <password>change-me</password>
+  </mysql>
+
+  <!-- LAN open for first setup. Switch to password + group when ready:
+  <auth method="password">
+    <user>admin</user>
+    <password>change-me</password>
+    <group>admin</group>
+    <session-days>30</session-days>
+  </auth>
+  -->
+  <auth method="none"/>
+</web-ui>

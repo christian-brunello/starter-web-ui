@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>STARTER Web UI</title>
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body>
+  <header>
+    <h1>STARTER Web UI</h1>
+    <span id="session-info" class="meta"></span>
+    <span class="spacer"></span>
+    <button id="btn-add" class="secondary" hidden>Aggiungi widget</button>
+    <button id="btn-logout" class="secondary" hidden>Logout</button>
+  </header>
+  <main id="dashboard"></main>
+
+  <dialog id="wizard">
+    <h2>Nuovo widget</h2>
+    <div class="form-row">
+      <label>Passo</label>
+      <div id="wiz-step-label">1 — Tipo I/O</div>
+    </div>
+    <div id="wiz-body"></div>
+    <div class="form-actions">
+      <button type="button" class="secondary" id="wiz-cancel">Annulla</button>
+      <button type="button" class="secondary" id="wiz-back" hidden>Indietro</button>
+      <button type="button" id="wiz-next">Avanti</button>
+    </div>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>

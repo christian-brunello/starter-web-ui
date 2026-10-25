@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login — STARTER Web UI</title>
+  <link rel="stylesheet" href="/style.css"/>
+</head>
+<body>
+  <div class="login-wrap">
+    <h1>Login</h1>
+    <form id="login-form">
+      <div class="form-row">
+        <label for="user">Username</label>
+        <input id="user" name="user" autocomplete="username" required/>
+      </div>
+      <div class="form-row">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required/>
+      </div>
+      <p id="err" style="color:var(--danger);display:none"></p>
+      <div class="form-actions">
+        <button type="submit">Entra</button>
+      </div>
+    </form>
+  </div>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = document.getElementById('user').value;
+      const password = document.getElementById('password').value;
+      const err = document.getElementById('err');
+      err.style.display = 'none';
+      const r = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, password })
+      });
+      if (!r.ok) {
+        err.textContent = 'Credenziali non valide';
+        err.style.display = 'block';
+        return;
+      }
+      location.href = '/';
+    });
+  </script>
+</body>
+</html>

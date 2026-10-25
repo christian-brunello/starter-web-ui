@@ -1,0 +1,31 @@
+starter-web-ui
+==============
+
+House dashboard UI for STARTER. C/GLib/libsoup serves HTTP; Guile registers
+widget types and always draws refresh view-models. Live I/O via
+starter-http-bridge; history charts via MySQL (labels/history).
+
+Build
+-----
+
+  ./autogen.sh
+  ./configure
+  make
+
+Run (from build tree)
+---------------------
+
+  ./src/starter-web-ui -c examples/web-ui.xml
+
+UI: http://127.0.0.1:18767/
+
+Optional browser auth (username/password + persistent cookie, groups
+user|admin) is configured in the daemon XML. Dashboard layout is stored in
+data-dir/user-config.xml (empty on first start; edit via the UI as admin).
+
+See doc/starter-web-ui.info.
+
+License
+-------
+
+GPL-3.0-or-later. See COPYING.

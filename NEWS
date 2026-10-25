@@ -1,0 +1,6 @@
+starter-web-ui 1.0.0
+--------------------
+
+* Initial release: dashboard shell, Guile widgets (toggle/slider/sensor/chart),
+  http-bridge proxy, MySQL history pipeline, optional password auth with
+  groups user|admin, XML user-config persistence.

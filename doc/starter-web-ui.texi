@@ -1,0 +1,171 @@
+\input texinfo
+@c -*-texinfo-*-
+@setfilename starter-web-ui.info
+@settitle STARTER Web UI
+@include version.texi
+
+@paragraphindent 0
+
+@copying
+This manual is for starter-web-ui (version @value{VERSION}),
+a Guile-extensible house dashboard for STARTER.
+
+Copyright @copyright{} 2026 Christian Brunello
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled ``GNU Free
+Documentation License''.
+@end quotation
+@end copying
+
+@dircategory System Administration
+@direntry
+* STARTER Web UI: (starter-web-ui).  Guile dashboard for STARTER.
+@end direntry
+
+@titlepage
+@title STARTER Web UI
+@subtitle Version @value{VERSION}
+@author Christian Brunello
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@ifnottex
+@node Top
+@top STARTER Web UI
+@insertcopying
+@end ifnottex
+
+@contents
+
+@menu
+* Introduction::
+* Building::
+* Configuration::
+* Architecture::
+* HTTP API::
+* Guile widgets::
+* Authentication::
+* Bridge writes and USR1::
+* Copying This Manual::
+* GNU Free Documentation License::
+* GNU General Public License::
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+@command{starter-web-ui} serves a browser dashboard. The C kernel owns
+HTTP, MySQL execution, the http-bridge client, timers, and auth.
+Guile registers widget types and always produces the refresh view-model
+(@code{prepare} / @code{draw}). Live values come from
+@command{starter-http-bridge}; charts query MySQL @code{labels}/@code{history}.
+
+@node Building
+@chapter Building
+
+@example
+./autogen.sh
+./configure
+make
+./src/starter-web-ui -c examples/web-ui.xml
+@end example
+
+@node Configuration
+@chapter Configuration
+
+Two XML files:
+
+@table @asis
+@item Daemon config
+Bind address/port, bridge URL, MySQL, auth, @code{data-dir}, paths.
+@item User-config
+Widget instances under @file{data-dir/user-config.xml}. Created empty;
+rewritten atomically when the UI adds/edits/deletes widgets.
+@end table
+
+@node Architecture
+@chapter Architecture
+
+Refresh pipeline for every widget:
+
+@enumerate
+@item C timeout
+@item hook @code{before-widget-refresh}
+@item Guile @code{prepare} (SQL for history, or empty for live)
+@item C fetch (MySQL or bridge)
+@item Guile @code{draw} → JSON view-model
+@item hook @code{after-widget-refresh}
+@item Browser applies the view-model
+@end enumerate
+
+@node HTTP API
+@chapter HTTP API
+
+@table @code
+@item GET /health
+@item GET/POST /login, POST /logout
+@item GET /session
+@item GET /widget-types
+@item GET /dashboard
+@item POST /widgets, PUT/DELETE /widgets/@var{id}
+@item GET /widgets/@var{id}/data
+@item POST /widgets/@var{id}/action
+@item GET /labels
+@item /api/* 
+Proxy to http-bridge
+@end table
+
+@node Guile widgets
+@chapter Guile widgets
+
+Use @code{(widget-type-register! #:type ... #:tags ... #:fields ...
+#:prepare ... #:draw ...)} from @code{(web-ui core)}.
+Built-ins: @code{toggle}, @code{slider}, @code{sensor}, @code{chart}.
+
+Tags filter the editor wizard (@code{digital}/@code{analog},
+@code{live}/@code{history}, @code{writable}, @dots{}).
+
+@node Authentication
+@chapter Authentication
+
+Optional. @code{<auth method="none"/>} leaves the LAN open (admin-equivalent).
+@code{method="password"} requires username/password; session cookie is
+persistent (@code{HttpOnly}). Groups: @code{user} (view + live actions) and
+@code{admin} (also edit dashboard).
+
+@node Bridge writes and USR1
+@chapter Bridge writes and USR1
+
+Widget actions that change a live input always:
+
+@enumerate
+@item Read current flags from http-bridge
+@item Set @code{val} and OR @code{USR1} (@code{0x1000000000000000})
+@item Schedule a clear of @code{USR1} after @code{usr1-clear-timeout-sec}
+      (daemon XML; @code{0} keeps the flag)
+@end enumerate
+
+All bridge @code{PUT}s use retries with bouncing backoff
+(@code{bridge-put-retries}, @code{bridge-put-backoff-ms}).
+
+@node Copying This Manual
+@appendix Copying This Manual
+
+@insertcopying
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+@include fdl.texi
+
+@node GNU General Public License
+@appendix GNU General Public License
+@include gpl.texi
+
+@bye
