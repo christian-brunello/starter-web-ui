@@ -1,4 +1,4 @@
-;;; Built-in widget types: toggle, slider, sensor, chart
+;;; Built-in widget types: toggle, slider, sensor, chart, grafana
 (use-modules (web-ui core)
              (ice-9 format)
              (ice-9 regex))
@@ -116,19 +116,30 @@
           ((string=? r "1h") 3600)
           (else 300))))
 
+(define (sql-quote-literal s)
+  ;; Escape single quotes for embedding a label name in SQL.
+  (string-fold
+   (lambda (ch acc)
+     (if (char=? ch #\')
+         (string-append acc "''")
+         (string-append acc (string ch))))
+   ""
+   (if (string? s) s "")))
+
 (widget-type-register!
  #:type 'chart
  #:label "Grafico"
  #:tags '(analog history)
  #:fields
  '((title (type string) (label "Titolo") (default ""))
-   (window (type enum) (label "Finestra") (default "24h"))
+   (window (type enum) (label "Finestra") (default "7d"))
    (resolution (type enum) (label "Risoluzione") (default "5m"))
    (refresh-sec (type int) (label "Refresh (s)") (default "30")))
  #:prepare
  (lambda (widget)
    (let* ((label (assq-str widget 'entity-label))
-          (lab (if (string-null? label) (assq-str widget 'entity-name) label))
+          (lab (sql-quote-literal
+                (if (string-null? label) (assq-str widget 'entity-name) label)))
           (bucket (resolution->seconds widget))
           (iv (window->interval widget)))
      (format #f
@@ -143,10 +154,52 @@
  #:draw
  (lambda (widget raw)
    (let* ((title (let ((t (assq-str widget 'title)))
-                   (if (string-null? t) (assq-str widget 'id) t))))
-     ;; Pass through SQL JSON rows as series; shell plots t/v
+                   (if (string-null? t) (assq-str widget 'id) t)))
+          (rows (if (and (string? raw) (> (string-length raw) 0)
+                         (not (string-prefix? "{\"error\"" raw)))
+                    raw
+                    "[]")))
      (format #f
-             "{\"kind\":\"chart\",\"id\":~s,\"title\":~s,\"rows\":~a}"
+             "{\"kind\":\"chart\",\"id\":~s,\"title\":~s,\"rows\":~a,\"window\":~s}"
              (assq-str widget 'id)
              title
-             (if (and (string? raw) (> (string-length raw) 0)) raw "[]")))))
+             rows
+             (assq-str widget 'window)))))
+
+(widget-type-register!
+ #:type 'grafana
+ #:label "Grafana panel"
+ #:tags '(grafana)
+ #:fields
+ '((title (type string) (label "Titolo") (default ""))
+   (dashboard-uid (type string) (label "Dashboard UID") (default ""))
+   (dashboard-slug (type string) (label "Slug (opz.)") (default ""))
+   (panel-id (type string) (label "Panel ID") (default "1"))
+   (from (type string) (label "From") (default "now-6h"))
+   (to (type string) (label "To") (default "now"))
+   (theme (type string) (label "Theme") (default "dark"))
+   (refresh-sec (type int) (label "Refresh (s)") (default "60")))
+ #:prepare (lambda (w) "")
+ #:draw
+ (lambda (widget raw)
+   (let* ((title (let ((t (assq-str widget 'title)))
+                   (if (string-null? t) (assq-str widget 'id) t)))
+          (uid (assq-str widget 'dashboard-uid))
+          (slug (let ((s (assq-str widget 'dashboard-slug)))
+                  (if (string-null? s) uid s)))
+          (panel (let ((p (assq-str widget 'panel-id)))
+                   (if (string-null? p) "1" p)))
+          (from (let ((f (assq-str widget 'from)))
+                  (if (string-null? f) "now-6h" f)))
+          (to (let ((t (assq-str widget 'to)))
+                (if (string-null? t) "now" t)))
+          (theme (let ((th (assq-str widget 'theme)))
+                   (if (string-null? th) "dark" th)))
+          (path (format #f
+                        "/d-solo/~a/~a?orgId=1&from=~a&to=~a&panelId=~a&theme=~a"
+                        uid slug from to panel theme)))
+     (format #f
+             "{\"kind\":\"grafana\",\"id\":~s,\"title\":~s,\"path\":~s}"
+             (assq-str widget 'id)
+             title
+             path))))

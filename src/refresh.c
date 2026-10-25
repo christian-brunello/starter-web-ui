@@ -46,8 +46,14 @@ wui_refresh_widget (WuiApp *app, WuiWidget *w, GError **error)
       return FALSE;
     }
 
-  if (g_strcmp0 (w->entity_source, "history") == 0
-      || (prepare && *prepare && g_ascii_strncasecmp (prepare, "SELECT", 6) == 0))
+  if (g_strcmp0 (w->type, "grafana") == 0
+      || g_strcmp0 (w->entity_source, "grafana") == 0)
+    {
+      /* iframe path comes from Guile draw; no bridge/history fetch */
+      raw = g_strdup ("{}");
+    }
+  else if (g_strcmp0 (w->entity_source, "history") == 0
+           || (prepare && *prepare && g_ascii_strncasecmp (prepare, "SELECT", 6) == 0))
     {
       if (prepare == NULL || !*prepare)
         {
