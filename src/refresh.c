@@ -58,12 +58,24 @@ wui_refresh_widget (WuiApp *app, WuiWidget *w, GError **error)
     }
   else
     {
-      /* live bridge */
+      /* live bridge: optional explicit feedback entity for display;
+       * write path remains entity (DigIn/AnaIn + USR1). */
       g_autofree gchar *path = NULL;
-      if (w->entity_domain && w->entity_name)
+
+      if (w->feedback_name && *w->feedback_name
+          && (w->feedback_source == NULL || *w->feedback_source == '\0'
+              || g_strcmp0 (w->feedback_source, "bridge") == 0))
+        {
+          const gchar *dom = (w->feedback_domain && *w->feedback_domain)
+                                 ? w->feedback_domain
+                                 : "output";
+          path = g_strdup_printf ("/%s/%s", dom, w->feedback_name);
+        }
+      else if (w->entity_domain && w->entity_name)
         path = g_strdup_printf ("/%s/%s", w->entity_domain, w->entity_name);
       else
         path = g_strdup ("/io");
+
       raw = wui_bridge_get (app, path, &local);
       if (raw == NULL && local)
         {

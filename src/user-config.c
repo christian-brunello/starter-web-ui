@@ -38,6 +38,10 @@ wui_widget_free (WuiWidget *w)
   g_free (w->entity_domain);
   g_free (w->entity_name);
   g_free (w->entity_label);
+  g_free (w->feedback_source);
+  g_free (w->feedback_domain);
+  g_free (w->feedback_name);
+  g_free (w->feedback_label);
   g_free (w->cached_view);
   if (w->fields)
     g_hash_table_destroy (w->fields);
@@ -141,6 +145,13 @@ wui_user_config_load (WuiApp *app, GError **error)
               w->entity_name = attr (c, "name");
               w->entity_label = attr (c, "label");
             }
+          else if (xmlStrcmp (c->name, (const xmlChar *) "feedback") == 0)
+            {
+              w->feedback_source = attr (c, "source");
+              w->feedback_domain = attr (c, "domain");
+              w->feedback_name = attr (c, "name");
+              w->feedback_label = attr (c, "label");
+            }
           else if (xmlStrcmp (c->name, (const xmlChar *) "fields") == 0)
             {
               xmlNode *f;
@@ -220,6 +231,21 @@ wui_user_config_save (WuiApp *app, GError **error)
         xmlNewProp (ent, (const xmlChar *) "name", (const xmlChar *) w->entity_name);
       if (w->entity_label)
         xmlNewProp (ent, (const xmlChar *) "label", (const xmlChar *) w->entity_label);
+
+      if (w->feedback_name && *w->feedback_name)
+        {
+          xmlNode *fb = xmlNewChild (wn, NULL, (const xmlChar *) "feedback", NULL);
+          if (w->feedback_source)
+            xmlNewProp (fb, (const xmlChar *) "source",
+                        (const xmlChar *) w->feedback_source);
+          if (w->feedback_domain)
+            xmlNewProp (fb, (const xmlChar *) "domain",
+                        (const xmlChar *) w->feedback_domain);
+          xmlNewProp (fb, (const xmlChar *) "name", (const xmlChar *) w->feedback_name);
+          if (w->feedback_label)
+            xmlNewProp (fb, (const xmlChar *) "label",
+                        (const xmlChar *) w->feedback_label);
+        }
 
       fields = xmlNewChild (wn, NULL, (const xmlChar *) "fields", NULL);
       g_hash_table_iter_init (&iter, w->fields);

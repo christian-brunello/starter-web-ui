@@ -22,6 +22,11 @@
           ((symbol? v) (symbol->string v))
           (else ""))))
 
+(define (assq-num widget key default)
+  (let* ((s (assq-str widget key))
+         (n (and (not (string-null? s)) (string->number s))))
+    (if (number? n) n default)))
+
 (define (parse-val-from-raw raw)
   ;; raw is JSON object string; pull "val" number crudely
   (let ((m (string-match "\"val\"[ \t]*:[ \t]*(-?[0-9]+(\\.[0-9]+)?)" raw)))
@@ -56,6 +61,9 @@
  #:tags '(analog live writable input)
  #:fields
  '((title (type string) (label "Titolo") (default ""))
+   (min (type number) (label "Min") (default "0"))
+   (max (type number) (label "Max") (default "100"))
+   (step (type number) (label "Step") (default "0.1"))
    (show_value (type bool) (label "Mostra valore") (default "true"))
    (refresh-sec (type int) (label "Refresh (s)") (default "5")))
  #:prepare (lambda (w) "")
@@ -63,12 +71,17 @@
  (lambda (widget raw)
    (let* ((title (let ((t (assq-str widget 'title)))
                    (if (string-null? t) (assq-str widget 'id) t)))
+          (lo (assq-num widget 'min 0))
+          (hi (assq-num widget 'max 100))
+          (hi (if (<= hi lo) (+ lo 1) hi))
+          (step (let ((s (assq-num widget 'step 0.1)))
+                  (if (<= s 0) 0.1 s)))
           (val (parse-val-from-raw raw)))
      (format #f
-             "{\"kind\":\"slider\",\"id\":~s,\"title\":~s,\"value\":~a,\"min\":0,\"max\":100}"
+             "{\"kind\":\"slider\",\"id\":~s,\"title\":~s,\"value\":~a,\"min\":~a,\"max\":~a,\"step\":~a}"
              (assq-str widget 'id)
              title
-             val))))
+             val lo hi step))))
 
 (widget-type-register!
  #:type 'sensor

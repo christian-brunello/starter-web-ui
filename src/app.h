@@ -37,6 +37,11 @@ struct WuiWidget {
   gchar *entity_domain; /* input | output */
   gchar *entity_name;   /* DigIn1 or label name */
   gchar *entity_label;  /* history label */
+  /* Optional display feedback (typically bridge output DigOut/AnaOut). */
+  gchar *feedback_source;
+  gchar *feedback_domain;
+  gchar *feedback_name;
+  gchar *feedback_label;
   GHashTable *fields;   /* name -> string value */
   gchar *cached_view;   /* last Guile draw JSON */
   guint refresh_source; /* GSource id */

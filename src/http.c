@@ -121,6 +121,17 @@ dashboard_json (WuiApp *app)
       json_builder_set_member_name (b, "label");
       json_builder_add_string_value (b, w->entity_label ? w->entity_label : "");
       json_builder_end_object (b);
+      json_builder_set_member_name (b, "feedback");
+      json_builder_begin_object (b);
+      json_builder_set_member_name (b, "source");
+      json_builder_add_string_value (b, w->feedback_source ? w->feedback_source : "");
+      json_builder_set_member_name (b, "domain");
+      json_builder_add_string_value (b, w->feedback_domain ? w->feedback_domain : "");
+      json_builder_set_member_name (b, "name");
+      json_builder_add_string_value (b, w->feedback_name ? w->feedback_name : "");
+      json_builder_set_member_name (b, "label");
+      json_builder_add_string_value (b, w->feedback_label ? w->feedback_label : "");
+      json_builder_end_object (b);
       json_builder_set_member_name (b, "fields");
       json_builder_begin_object (b);
       g_hash_table_iter_init (&iter, w->fields);
@@ -172,6 +183,14 @@ widget_from_json (JsonObject *o)
       w->entity_domain = g_strdup (json_object_get_string_member_with_default (ent, "domain", ""));
       w->entity_name = g_strdup (json_object_get_string_member_with_default (ent, "name", ""));
       w->entity_label = g_strdup (json_object_get_string_member_with_default (ent, "label", ""));
+    }
+  if (json_object_has_member (o, "feedback"))
+    {
+      JsonObject *fb = json_object_get_object_member (o, "feedback");
+      w->feedback_source = g_strdup (json_object_get_string_member_with_default (fb, "source", ""));
+      w->feedback_domain = g_strdup (json_object_get_string_member_with_default (fb, "domain", ""));
+      w->feedback_name = g_strdup (json_object_get_string_member_with_default (fb, "name", ""));
+      w->feedback_label = g_strdup (json_object_get_string_member_with_default (fb, "label", ""));
     }
   if (json_object_has_member (o, "fields"))
     {

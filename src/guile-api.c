@@ -54,6 +54,14 @@ widget_to_scm_alist (WuiWidget *w)
                      scm_from_utf8_string (w->entity_name ? w->entity_name : ""), alist);
   alist = scm_acons (scm_from_utf8_symbol ("entity-label"),
                      scm_from_utf8_string (w->entity_label ? w->entity_label : ""), alist);
+  alist = scm_acons (scm_from_utf8_symbol ("feedback-source"),
+                     scm_from_utf8_string (w->feedback_source ? w->feedback_source : ""), alist);
+  alist = scm_acons (scm_from_utf8_symbol ("feedback-domain"),
+                     scm_from_utf8_string (w->feedback_domain ? w->feedback_domain : ""), alist);
+  alist = scm_acons (scm_from_utf8_symbol ("feedback-name"),
+                     scm_from_utf8_string (w->feedback_name ? w->feedback_name : ""), alist);
+  alist = scm_acons (scm_from_utf8_symbol ("feedback-label"),
+                     scm_from_utf8_string (w->feedback_label ? w->feedback_label : ""), alist);
 
   g_hash_table_iter_init (&iter, w->fields);
   while (g_hash_table_iter_next (&iter, &k, &v))
