@@ -67,7 +67,10 @@ boot (void *data)
   if (scheme_dir)
     add_load_path (scheme_dir);
 
-  wui_guile_api_register (b->app);
+  /* Start from guile-user; define-module forms in the Scheme files set up
+   * (web-ui hooks) / (web-ui core). Inject the C primitive only after those
+   * modules exist, then load plugins that call widget-type-register!. */
+  scm_set_current_module (scm_c_resolve_module ("guile-user"));
 
   if (scheme_dir)
     {
@@ -77,6 +80,12 @@ boot (void *data)
         scm_c_primitive_load (hooks_path);
       if (g_file_test (core_path, G_FILE_TEST_IS_REGULAR))
         scm_c_primitive_load (core_path);
+    }
+
+  wui_guile_api_register (b->app);
+
+  if (scheme_dir)
+    {
       init_path = g_build_filename (scheme_dir, "init.scm", NULL);
       if (g_file_test (init_path, G_FILE_TEST_IS_REGULAR))
         {

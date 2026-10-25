@@ -131,22 +131,26 @@ scm_register_widget_type_x (SCM name, SCM label, SCM tags, SCM fields_json,
   return SCM_UNSPECIFIED;
 }
 
+static void
+bind_register_primitive (void *data)
+{
+  (void) data;
+  scm_c_define_gsubr ("%register-widget-type!", 6, 0, 0,
+                      (scm_t_subr) scm_register_widget_type_x);
+  scm_c_export ("%register-widget-type!", NULL);
+}
+
 void
 wui_guile_api_register (WuiApp *app)
 {
-  SCM mod;
-  SCM prim;
-
   g_api_app = app;
   if (app->widget_types == NULL)
     app->widget_types = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, wtype_free);
 
-  mod = scm_c_resolve_module ("web-ui core");
-  scm_set_current_module (mod);
-  prim = scm_c_make_gsubr ("%register-widget-type!", 6, 0, 0,
-                           (scm_t_subr) scm_register_widget_type_x);
-  scm_c_module_define (mod, "%register-widget-type!", prim);
-  scm_c_export ("%register-widget-type!", NULL);
+  /* Enter existing (web-ui core) from core.scm, or create it, then bind C API.
+   * scm_c_define_module runs the binder with that module as current — avoids
+   * module-add! on #f seen with resolve+export before the module was live. */
+  scm_c_define_module ("web-ui core", bind_register_primitive, NULL);
 }
 
 WuiWidgetType *
