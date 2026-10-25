@@ -41,10 +41,10 @@ resolve_scheme_dir (WuiApp *app)
     NULL
   };
   guint i;
-  for (i = 0; cands[i]; i++)
+  for (i = 0; i < G_N_ELEMENTS (cands); i++)
     {
       g_autofree gchar *init = NULL;
-      if (!cands[i] || !g_file_test (cands[i], G_FILE_TEST_IS_DIR))
+      if (!cands[i] || !*cands[i] || !g_file_test (cands[i], G_FILE_TEST_IS_DIR))
         continue;
       init = g_build_filename (cands[i], "init.scm", NULL);
       if (g_file_test (init, G_FILE_TEST_IS_REGULAR))
